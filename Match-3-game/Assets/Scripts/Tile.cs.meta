@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: ce6a6446b0ffeb04096af71b4e75a205
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - Chip: {instanceID: 0}
+  - UpTile: {instanceID: 0}
+  - RightTile: {instanceID: 0}
+  - DownTile: {instanceID: 0}
+  - LeftTile: {instanceID: 0}
+  - EmitterPrefab: {fileID: 3051512257751129849, guid: 0222ddd28175c4d45a85a2b6db5064ba,
+      type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
