@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -27,12 +26,12 @@ public static class MatchFinder
     public static List<Chip> GetMaxMatchChips(Chip chip)
     {
         var chipsInMatch = GetMatchChips(chip);
-        int maxScore = 0;
+        var maxScore = 0;
         List<Chip> maxChips = null;
         foreach (var chipInMatch in chipsInMatch)
         {
             var currentChips = GetMatchChips(chipInMatch);
-            int currentScore = currentChips.Count;
+            var currentScore = currentChips.Count;
             if (currentScore > maxScore)
             {
                 maxScore = currentScore;
@@ -81,7 +80,7 @@ public static class MatchFinder
     /// <returns></returns>
     private static List<Chip> FindHorizontalMatch(Chip chip)
     {
-        List<Chip> list = new List<Chip>();
+        var list = new List<Chip>();
         list.AddRange(CountChipRow(chip, chip2 => chip2.LeftChip));
         list.AddRange(CountChipRow(chip, chip2 => chip2.RightChip));
         return list;
@@ -93,7 +92,7 @@ public static class MatchFinder
     /// <returns></returns>
     private static List<Chip> FindVerticalMatch(Chip chip)
     {
-        List<Chip> list = new List<Chip>();
+        var list = new List<Chip>();
         list.AddRange(CountChipRow(chip, chip2 => chip2.UpChip));
         list.AddRange(CountChipRow(chip, chip2 => chip2.DownChip));
         return list;

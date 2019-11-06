@@ -1,154 +1,34 @@
 ﻿using UnityEngine;
 using DG.Tweening;
 
-public class BoardManager : MonoBehaviour
+public static class BoardManager
 {
-    public static int BoardSize = 9;
+    public const int BoardSize = 9;
 
-    public static Tile[,] Tiles = new Tile[BoardSize,BoardSize];
+    public static readonly Tile[,] Tiles = new Tile[BoardSize,BoardSize];
 
 
-    public Sequence FallAll()
+    public static Sequence ScoreAndFallUntilSettle()
     {
-        var seqFallAll = DOTween.Sequence();
+        bool successScore;
+        var seqFullCircle = DOTween.Sequence();
         do
         {
-            seqFallAll.Append(FallAllOnce());// FallAllOnce();
-        } while (CanAnyChipFall());
+            seqFullCircle
+                .Append(ScoreMatches(out successScore))
+                .Append(FallAll());
 
-        return seqFallAll;
-    }
-
-    private bool CanAnyChipFall()
-    {
-        foreach (var tile in Tiles)
-        {
-            if (tile?.Chip == null)
-            {
-                continue;
-            }
-
-            if (tile.Chip.CanChipFallAnywhere())
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private Sequence FallAllOnce()
-    {
-        var seqFallVertical = DOTween.Sequence(); // Хранит сиквенсы каждой фишки о падении вниз
-        var fromOneEmitterInRow = 0;
-        var chipWasTherePrevPass = false;
+        } while (successScore);
         
-        // Только вертикальное падение
-        for (var x = 0; x < BoardSize; x++)
-        for (var y = BoardSize - 1; y >= 0; y--)
-        {
-            var tile = Tiles[y, x];
-
-            if (tile == null)
-            {
-                continue;
-            }
-            
-            // Если есть эмиттер, то создается фишка и падает.
-            // Если его нет, фишка просто падает.
-            if (tile.HasEmitter && tile.Chip == null)
-            {
-                var seqEmitterTile = tile.Emitter.TrySpawnChip(fromOneEmitterInRow++ * Chip.MoveTime)
-                    .Append(tile.Chip.FallAllWayVertical());
-                chipWasTherePrevPass = false;
-                y++;
-                seqFallVertical.Join(seqEmitterTile);
-                continue;
-            }
-            if (tile.HasEmitter && tile.Chip != null)
-            {
-                // Если в тайле с эмиттером осталась фишка с прошлого прохода
-                // Значит ей некуда падать, поэтому переход к след. тайлу.
-                if (chipWasTherePrevPass)
-                {
-                    chipWasTherePrevPass = false;
-                    continue;
-                }
-                seqFallVertical.Join(tile.Chip.FallAllWayVertical());
-                chipWasTherePrevPass = true;
-                // Создается фишка и падает вниз
-                var seqEmitterTile = tile.Emitter.TrySpawnChip(fromOneEmitterInRow++ * Chip.MoveTime)
-                    .Append(tile.Chip.FallAllWayVertical());
-                y++;
-                seqFallVertical.Join(seqEmitterTile);
-                continue;
-            }
-
-            if (tile.Chip == null)
-            {
-                continue;;
-            }
-            seqFallVertical.Join(tile.Chip.FallAllWayVertical());
-            
-            fromOneEmitterInRow = 0;
-        }
-
-        fromOneEmitterInRow = 0;
-        chipWasTherePrevPass = false;
-        var seqFallAllWay = DOTween.Sequence();
-        
-        // И вертикальное и вбок.
-        for (var x = 0; x < BoardSize; x++)
-        for (var y = BoardSize - 1; y >= 0; y--)
-        {
-            var tile = Tiles[y, x];
-            if (tile == null)
-            {
-                continue;
-            }
-            
-            if (tile.HasEmitter && tile.Chip == null)
-            {
-                var seqEmitterTile = tile.Emitter.TrySpawnChip(fromOneEmitterInRow++ * Chip.MoveTime)
-                    .Append(tile.Chip.FallAllWay());
-                chipWasTherePrevPass = false;
-                y++;
-                seqFallAllWay.Join(seqEmitterTile);
-                continue;
-            }
-            if (tile.HasEmitter && tile.Chip != null)
-            {
-                if (chipWasTherePrevPass)
-                {
-                    chipWasTherePrevPass = false;
-                    continue;
-                }
-                seqFallAllWay.Join(tile.Chip.FallAllWay());
-                chipWasTherePrevPass = true;
-                // Создается фишка и падает вниз
-                var seqEmitterTile = tile.Emitter.TrySpawnChip(fromOneEmitterInRow++ * Chip.MoveTime)
-                    .Append(tile.Chip.FallAllWay());
-                y++;
-                seqFallAllWay.Join(seqEmitterTile);
-                continue;
-            }
-
-            if (tile.Chip == null)
-            {
-                continue;
-            }
-            
-            seqFallAllWay.Join(tile.Chip.FallAllWay());
-            fromOneEmitterInRow = 0;
-        }
-        
-        seqFallVertical.Append(seqFallAllWay);
-        return seqFallVertical;
+        seqFullCircle.onPlay += () => GameStateManager.CurrentState = GameStateManager.GameState.Falling;
+        seqFullCircle.onComplete += () => GameStateManager.CurrentState = GameStateManager.GameState.WaitingForSwap;
+        return seqFullCircle;
     }
 
     /// <summary>
     /// Ищет и собирает все матчи на поле
     /// </summary>
-    public Sequence ScoreMatches(out bool successScore)
+    private static Sequence ScoreMatches(out bool successScore)
     {
         foreach (var tile in Tiles)
         {
@@ -178,10 +58,103 @@ public class BoardManager : MonoBehaviour
             if (chip && chip.IsScored)
             {
                 successScore = true;
-                // Анимация собирания здесь
                 seq.Join(chip.Disappear());
             }
         }
         return seq;
+    }
+
+    private static Sequence FallAll()
+    {
+        var seqFallAll = DOTween.Sequence();
+        do
+        {
+            seqFallAll
+                .Append(FallAllOnce(true))
+                .Append(FallAllOnce(false));
+        } while (CanAnyChipFall());
+
+        return seqFallAll;
+    }
+
+    private static bool CanAnyChipFall()
+    {
+        foreach (var tile in Tiles)
+        {
+            if (tile == null || tile.Chip == null)
+            {
+                continue;
+            }
+
+            if (tile.Chip.CanChipFallAnywhere())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /// <summary>
+    /// Один проход по полю, каждая клетка пытается упасть до конца вниз.
+    /// Клетки с эмиттерами обрабатываются по несколько раз.
+    /// </summary>
+    /// <param name="verticalOnly"></param>
+    /// <returns></returns>
+    private static Sequence FallAllOnce(bool verticalOnly)
+    {
+        var seqFallAllChips = DOTween.Sequence();
+        var fromOneEmitterInRow = 0;
+        var chipWasTherePrevPass = false;
+        
+        for (var x = 0; x < BoardSize; x++)
+        for (var y = BoardSize - 1; y >= 0; y--)
+        {
+            var tile = Tiles[y, x];
+
+            if (tile == null)
+            {
+                continue;
+            }
+            
+            // Если есть эмиттер, то создается фишка и падает.
+            // Если его нет, фишка просто падает.
+            if (tile.Emitter != null && tile.Chip == null)
+            {
+                chipWasTherePrevPass = false;
+                y++;
+                seqFallAllChips.Join(tile.Emitter.TrySpawnAndFall(fromOneEmitterInRow++ * Chip.MoveTime, verticalOnly));
+                continue;
+            }
+            if (tile.Emitter != null && tile.Chip != null)
+            {
+                // Если в тайле с эмиттером осталась фишка с прошлого прохода
+                // Значит ей некуда падать, поэтому переход к след. тайлу.
+                if (chipWasTherePrevPass)
+                {
+                    chipWasTherePrevPass = false;
+                    fromOneEmitterInRow = 0;
+                    continue;
+                }
+                
+                seqFallAllChips.Join(tile.Chip.FallAllWay(verticalOnly));
+                
+                chipWasTherePrevPass = true;
+                y++;
+                seqFallAllChips.Join(tile.Emitter.TrySpawnAndFall(fromOneEmitterInRow++ * Chip.MoveTime, verticalOnly));
+                continue;
+            }
+
+            if (tile.Chip == null)
+            {
+                continue;;
+            }
+            
+            seqFallAllChips.Join(tile.Chip.FallAllWay(verticalOnly));
+            
+            fromOneEmitterInRow = 0;
+        }
+
+        return seqFallAllChips;
     }
 }

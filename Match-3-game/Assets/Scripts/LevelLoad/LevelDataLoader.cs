@@ -6,7 +6,7 @@ public class LevelDataLoader
     public static LevelData LevelData;
     public static string FullPath;
 
-    public static bool IsLevelLoaded { get; private set; } = false;
+    public static bool IsLevelLoaded { get; private set; }
 
     private static string RelativePath = "TestLevel.json";
 

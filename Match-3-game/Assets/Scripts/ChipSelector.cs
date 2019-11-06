@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using DG.Tweening;
+﻿using DG.Tweening;
 using UnityEngine;
 
 public static class ChipSelector
 {
     private static Chip SelectedChip;
-
+    
     public static void OnChipEnter(Chip chip)
     {
         if (GameStateManager.CurrentState != GameStateManager.GameState.WaitingForSwap)
@@ -74,7 +71,7 @@ public static class ChipSelector
             .Append(SwapChips(SelectedChip, secondChip));
         if (MatchFinder.IsInMatch(SelectedChip) || MatchFinder.IsInMatch(secondChip))
         {
-            seq.Append(GameStateManager.ScoreAndFallUntilSettle());
+            seq.Append(BoardManager.ScoreAndFallUntilSettle());
         }
         else
         {
@@ -88,18 +85,14 @@ public static class ChipSelector
         return first.LeftChip == second || first.RightChip == second || first.UpChip == second || first.DownChip == second;
     }
 
-    private static Tween SelectChip(Chip chip)
+    private static void SelectChip(Chip chip)
     {
         SelectedChip = chip;
-        var tween = chip.transform
-            .DORotate(chip.transform.rotation.eulerAngles + new Vector3(0, 0, -30), 0.1f);
-        return tween;
+        chip.transform.DORotate(chip.transform.rotation.eulerAngles + new Vector3(0, 0, -30), 0.1f);
     }
-    private static Tween DeselectChip(Chip chip)
+    private static void DeselectChip(Chip chip)
     {
         SelectedChip = null;
-        var tween = chip.transform
-            .DORotate(Vector3.zero, 0.1f);
-        return tween;
+        chip.transform.DORotate(Vector3.zero, 0.1f);
     }
 }

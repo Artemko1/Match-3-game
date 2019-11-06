@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,7 +22,7 @@ public class LevelLoader : MonoBehaviour
         FillByPresetChips(LevelDataLoader.LevelData.ChipMap);
         FillByPseudoRandomChips();
         RemoveMatches();
-        GameStateManager.ScoreAndFallUntilSettle();
+        BoardManager.ScoreAndFallUntilSettle();
     }
     
     private static void RemoveLevel()
@@ -32,7 +31,7 @@ public class LevelLoader : MonoBehaviour
         for (var x = 0; x < BoardManager.BoardSize; x++)
         {
             var tile = BoardManager.Tiles[y, x];
-            tile?.DestroyWithChilds();
+            tile?.DestroyWithChildren();
             BoardManager.Tiles[y, x] = null;
         }
     }
@@ -67,7 +66,7 @@ public class LevelLoader : MonoBehaviour
         FillByPresetChips(LevelDataLoader.LevelData.ChipMap);
         FillByPseudoRandomChips();
         RemoveMatches();
-        GameStateManager.ScoreAndFallUntilSettle();
+        BoardManager.ScoreAndFallUntilSettle();
     }
     
     private static void CreateTileGrid(string[] tileMap)
@@ -111,7 +110,6 @@ public class LevelLoader : MonoBehaviour
             var chip = tile?.Chip;
             if ((chip?.IsPreset == false) && MatchFinder.IsInMatch(chip))
             {
-                chip.gameObject.SetActive(false);
                 tile.DestroyChip();
                 tile.SetChip(ChipManager.CreateChipPseudoRandom(tile.y, tile.x));
             }

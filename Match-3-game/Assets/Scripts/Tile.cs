@@ -1,14 +1,13 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Tile : MonoBehaviour
 {
-    public Chip Chip;
+    private const float EmitterOffset = TileManager.TileSize / 2;
     
+    public Chip Chip;
     public Emitter Emitter;
 
-    public bool HasEmitter = false;
-
+    public int y, x;
 
     public Tile UpTile
     {
@@ -82,10 +81,7 @@ public class Tile : MonoBehaviour
         }
     }
 
-    public int y, x;
-
-    private GameObject EmitterPrefab;
-    private static readonly float EmitterOffset = TileManager.TileSize / 2;
+    private GameObject EmitterGo;
 
     /// <summary>
     /// Перемещает фишку на тайл
@@ -112,7 +108,7 @@ public class Tile : MonoBehaviour
         Chip = null;
     }
 
-    public void DestroyWithChilds()
+    public void DestroyWithChildren()
     {
         DestroyChip();
         RemoveEmitter();
@@ -121,25 +117,16 @@ public class Tile : MonoBehaviour
 
     public void CreateEmitter()
     {
-        HasEmitter = true;
         var emitterPos = transform.position;
         emitterPos.y += EmitterOffset;
-        Emitter = Instantiate(EmitterPrefab).GetComponent<Emitter>();
-        Emitter.transform.position = emitterPos;
-        Emitter.Tile = this;
+        EmitterGo = Instantiate(TileManager.EmitterPrefab);
+        EmitterGo.transform.position = emitterPos;
+        Emitter = new Emitter(this);
     }
 
-    public void RemoveEmitter()
+    private void RemoveEmitter()
     {
-        if (HasEmitter)
-        {
-            HasEmitter = false;
-            Destroy(Emitter.gameObject);
-        }
-    }
-
-    private void Awake()
-    {
-        EmitterPrefab = Resources.Load<GameObject>("Prefabs/Emitter");
+        Emitter = null;
+        Destroy(EmitterGo);
     }
 }

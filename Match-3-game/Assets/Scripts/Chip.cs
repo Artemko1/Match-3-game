@@ -1,27 +1,22 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using DG.Tweening;
-using System;
-using DG.Tweening.Core;
-using DG.Tweening.Plugins.Options;
 
 public class Chip : MonoBehaviour
 {
+    public const float MoveTime = 0.2f;
+    private const float AppearTime = 0.2f;
+    
     public Tile Tile;
     public int Type;
     public bool IsPreset;
     public bool IsScored;
 
-    public const float MoveTime = 0.25f;
 
     public Chip UpChip => Tile.UpTile?.Chip;
     public Chip RightChip => Tile.RightTile?.Chip;
     public Chip LeftChip => Tile.LeftTile?.Chip;
     public Chip DownChip => Tile.DownTile?.Chip;
-    
 
-    private readonly float AppearTime = 0.25f;
 
     public Tween Move(Tile tileToMove)
     {
@@ -44,32 +39,12 @@ public class Chip : MonoBehaviour
     {
         Tile.Chip = null;
         Tween tween = transform.DOScale(0.1f, 0.25f);
-        tween.onComplete += OnDisappearComplete;
+        tween.onComplete += () => Destroy(gameObject);
 
         return tween;
     }
 
-    private void OnDisappearComplete()
-    {
-        Destroy(gameObject);
-    }
-
-    /// <summary>
-    /// Находит самую нижнюю пустую клетку по вертикали
-    /// </summary>
-    /// <returns></returns>
-    public Sequence FallAllWayVertical()
-    {
-        var seq = DOTween.Sequence();
-
-        while (CanChipFallThere(Tile.DownTile))
-        {
-            seq.Append(Move(Tile.DownTile));
-        }
-        return seq;
-    }
-
-    public Sequence FallAllWay()
+    public Sequence FallAllWay(bool verticalOnly)
     {
         var seq = DOTween.Sequence();
         var cantMove = false;
@@ -79,11 +54,11 @@ public class Chip : MonoBehaviour
             {
                 seq.Append(Move(Tile.DownTile));
             }
-            else if (CanChipFallThere(Tile.DownLeftTile))
+            else if (!verticalOnly && CanChipFallThere(Tile.DownLeftTile))
             {
                 seq.Append(Move(Tile.DownLeftTile));
             }
-            else if (CanChipFallThere(Tile.DownRightTile))
+            else if (!verticalOnly && CanChipFallThere(Tile.DownRightTile))
             {
                 seq.Append(Move(Tile.DownRightTile));
             }
@@ -117,7 +92,6 @@ public class Chip : MonoBehaviour
     {
         return tileToFall != null && tileToFall.Chip == null;
     }
-
 
     private void OnMouseDown()
     {

@@ -5,6 +5,7 @@ using Random = UnityEngine.Random;
 public class ChipManager : MonoBehaviour
 {
     private static List<Chip> ChipPrefabs;
+    private static int NumberOfChipTypes = 5;
 
     public static Chip CreateRandomChip()
     {
@@ -12,14 +13,6 @@ public class ChipManager : MonoBehaviour
         return CreateChipOfType(random);
     }
 
-    /// <summary>
-    /// Если у клетки предустановленное значение, спавнит конкретную фишку.
-    /// Иначе не создает фишку.
-    /// </summary>
-    /// <param name="map"></param>
-    /// <param name="y"></param>
-    /// <param name="x"></param>
-    /// <returns></returns>
     public static Chip CreateChipByMapValue(string[] map, int y, int x)
     {
         var value = map[y][x];
@@ -29,10 +22,8 @@ public class ChipManager : MonoBehaviour
         {
             return CreateChipOfType(number, true);
         }
-        else
-        {
-            return null;   
-        }
+
+        return null;
     }
 
     public static Chip CreateChipPseudoRandom(int y, int x)
@@ -91,7 +82,7 @@ public class ChipManager : MonoBehaviour
     private void Awake()
     {
         ChipPrefabs = new List<Chip>();
-        for (var i = 0; i < 5; i++)
+        for (var i = 0; i < NumberOfChipTypes; i++)
         {
             ChipPrefabs.Add(Resources.Load<Chip>($"Prefabs/Chip{i}"));
         }
